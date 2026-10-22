@@ -161,6 +161,54 @@
   mix-blend-mode: screen;
 }
 
+/* Mascote do Claude Code: respira, pisca e mexe as pernas. */
+.buddy-breathe {
+  animation: buddy-breathe 1.8s ease-in-out infinite;
+}
+
+.buddy-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: buddy-blink 3.6s infinite;
+}
+
+.buddy-leg {
+  transform-box: fill-box;
+  transform-origin: top;
+  animation: buddy-leg 0.9s ease-in-out infinite;
+}
+
+@keyframes buddy-breathe {
+  50% {
+    transform: translateY(-0.35px);
+  }
+}
+
+@keyframes buddy-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.15);
+  }
+}
+
+@keyframes buddy-leg {
+  50% {
+    transform: scaleY(0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buddy-breathe,
+  .buddy-blink,
+  .buddy-leg {
+    animation: none;
+  }
+}
+
 /* Anel que pisca num nó do pipeline quando um pedido é entregue ou falha. */
 .pipeline-flash {
   animation: pipeline-flash 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;

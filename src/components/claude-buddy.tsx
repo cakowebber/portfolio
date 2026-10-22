@@ -62,25 +62,18 @@ export default function ClaudeBuddy() {
       </AnimatePresence>
 
       <motion.svg animate={hop} viewBox="0 0 13 8" width={52} height={32} shapeRendering="crispEdges" aria-hidden>
-        <motion.g animate={{ y: [0, -0.35, 0] }} transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}>
+        {/* Respirar, piscar e as pernas ficam em CSS (index.css): dentro do SVG o framer não chegava a
+            aplicar os transforms, e animar o atributo height das pernas sujava o console. */}
+        <g className="buddy-breathe">
           {BODY.flatMap((row, y) => row.split("").map((pixel, x) => (pixel === "#" ? <rect key={`${x}-${y}`} x={x} y={y} width={1.02} height={1.02} fill={ORANGE} /> : null)))}
-          <motion.g style={{ transformBox: "fill-box", transformOrigin: "center" }} animate={{ scaleY: [1, 1, 0.15, 1] }} transition={{ duration: 3.6, times: [0, 0.92, 0.96, 1], repeat: Infinity }}>
+          <g className="buddy-blink">
             {EYES.map(([x, y]) => (
               <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#2b1a12" />
             ))}
-          </motion.g>
-        </motion.g>
+          </g>
+        </g>
         {LEGS.map((x, i) => (
-          <motion.rect
-            key={x}
-            x={x}
-            y={6}
-            width={1}
-            height={2}
-            fill={ORANGE}
-            animate={{ height: [2, 1.4, 2] }}
-            transition={{ duration: 0.9, repeat: Infinity, delay: (i % 2) * 0.45, ease: "easeInOut" }}
-          />
+          <rect key={x} x={x} y={6} width={1} height={2} fill={ORANGE} className="buddy-leg" style={{ animationDelay: `${(i % 2) * 0.45}s` }} />
         ))}
       </motion.svg>
     </button>
