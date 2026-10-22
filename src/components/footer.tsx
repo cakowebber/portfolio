@@ -21,6 +21,9 @@ export default function Footer() {
             © {new Date().getFullYear()} {profile.name}
             <br />
             {t("footer.madeIn")} · {t("footer.localTime")} <span className="tabular-nums text-foreground">{time}</span>
+            <br />
+            {/* Responde com um cartão em texto, ver netlify/edge-functions/terminal.ts */}
+            <span className="select-all">$ curl -L {new URL(profile.site).host}</span>
           </p>
           <p className="flex gap-5 md:justify-center">
             {socials.map((social) => (
