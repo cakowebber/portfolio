@@ -97,6 +97,7 @@
     "title": "Things I've <0>built</0>.",
     "subtitle": "Client products, a thesis and a few games that started as “just a weekend thing”.",
     "private": "private code",
+    "howItWorks": "How it works",
     "archiveTitle": "And a few more",
     "archiveHint": "Tools, experiments and smaller projects, almost all of them open source."
   },
@@ -151,6 +152,27 @@
     "madeIn": "Made in Criciúma, Brazil",
     "localTime": "my time",
     "backToTop": "Back to top"
+  },
+  "command": {
+    "open": "Open commands",
+    "title": "Commands",
+    "placeholder": "Type a command or search…",
+    "empty": "No command by that name.",
+    "go": "Go to",
+    "projects": "Projects",
+    "actions": "Actions",
+    "copyEmail": "Copy email",
+    "copied": "Email copied",
+    "cv": "Download CV",
+    "dark": "Dark theme",
+    "light": "Light theme",
+    "language": "Ler em português",
+    "snake": "Play snake on the GitHub chart",
+    "incident": "takes SAP down up top",
+    "hire": "opens an email with the subject filled in",
+    "hireSubject": "Opportunity",
+    "quit": "closes this",
+    "hints": "↑↓ navigate · ↵ open · esc close"
   },
   "notFound": {
     "title": "This page landed in the DLQ.",

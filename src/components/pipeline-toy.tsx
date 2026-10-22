@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type Key
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { RotateCcw, ShoppingBag, Zap } from "lucide-react";
+import { useCommandEvent } from "@/hooks/use-command-event";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 
@@ -330,6 +331,15 @@ export default function PipelineToy() {
     },
     [name, pushLog, t],
   );
+
+  // "rm -rf /" na paleta de comandos: derruba o SAP e manda uma rajada, para o retry e a DLQ trabalharem.
+  useCommandEvent("incident", () => {
+    containerRef.current?.scrollIntoView({ block: "center" });
+    later(() => {
+      if (!offlineRef.current.has("sap")) toggle("sap");
+      burst();
+    }, 700);
+  });
 
   // Tráfego ambiente, só quando o brinquedo está visível e a aba ativa.
   useEffect(() => {

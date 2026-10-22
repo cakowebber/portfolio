@@ -1,5 +1,6 @@
-import { ArrowUpRight, Lock } from "lucide-react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight, Lock, Plus } from "lucide-react";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 import { Trans, useTranslation } from "react-i18next";
 import SectionHeading from "@/components/section-heading";
 import { Reveal, ease } from "@/components/reveal";
@@ -8,6 +9,40 @@ import { useLocale } from "@/hooks/use-locale";
 import { archive, projects, type Project } from "@/lib/content";
 import { cn } from "@/lib/utils";
 
+const zoom = "absolute inset-0 h-full w-full transition-transform duration-1000 ease-out group-hover:scale-[1.035]";
+
+// Vídeo por cima da imagem: só baixa e toca enquanto o card está na tela, e só aparece quando o
+// primeiro quadro chega, então a imagem segura o lugar até lá. Com movimento reduzido, fica a imagem.
+function LoopVideo({ src }: { src: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const inView = useInView(ref, { margin: "25% 0px" });
+  const reduceMotion = useReducedMotion();
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video || reduceMotion) return;
+    if (inView) video.play().catch(() => {});
+    else video.pause();
+  }, [inView, reduceMotion]);
+
+  if (reduceMotion) return null;
+
+  return (
+    <video
+      ref={ref}
+      src={src}
+      muted
+      loop
+      playsInline
+      preload="none"
+      aria-hidden
+      onPlaying={() => setPlaying(true)}
+      className={cn(zoom, "object-cover transition-[opacity,transform]", playing ? "opacity-100" : "opacity-0")}
+    />
+  );
+}
+
 function ProjectVisual({ project }: { project: Project }) {
   const { visual } = project;
   if (visual.kind === "energy") return <EnergyVisual />;
@@ -15,13 +50,45 @@ function ProjectVisual({ project }: { project: Project }) {
   if (visual.kind === "recommendations") return <RecommendationsVisual />;
 
   return (
-    <img
-      src={visual.src}
-      alt={project.title}
-      loading="lazy"
-      decoding="async"
-      className={cn("absolute inset-0 h-full w-full transition-transform duration-1000 ease-out group-hover:scale-[1.035]", visual.fit === "contain" ? "object-contain p-2 md:p-4" : "object-cover")}
-    />
+    <>
+      <img src={visual.src} alt={project.title} loading="lazy" decoding="async" className={cn(zoom, visual.fit === "contain" ? "object-contain p-2 md:p-4" : "object-cover")} />
+      {visual.video && <LoopVideo src={visual.video} />}
+    </>
+  );
+}
+
+function HowItWorks({ note, open, onToggle }: { note: NonNullable<Project["howItWorks"]>; open: boolean; onToggle: () => void }) {
+  const { t } = useTranslation();
+  const { pick } = useLocale();
+
+  return (
+    <div className="mt-5">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 font-mono text-[12px] text-muted-foreground transition-colors hover:text-foreground">
+        <Plus className={cn("h-3.5 w-3.5 transition-transform duration-300", open && "rotate-45 text-primary")} />
+        {t("projects.howItWorks")}
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease }}
+            className="overflow-hidden">
+            <div className="max-w-xl pt-4">
+              <p className="text-[14.5px] leading-relaxed text-muted-foreground text-pretty">{pick(note.text)}</p>
+              <pre className="mt-3 overflow-x-auto rounded-xl border border-border bg-muted/60 p-4 font-mono text-[12px] leading-[1.7] text-foreground/85">
+                <code>{note.code}</code>
+              </pre>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -60,6 +127,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
   const { pick } = useLocale();
   const isFull = project.span === "full";
   const tone = project.visual.kind === "image" ? project.visual.tone : undefined;
+  const [howOpen, setHowOpen] = useState(false);
 
   return (
     <motion.article
@@ -69,14 +137,19 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       transition={{ duration: 0.9, ease, delay: isFull ? 0 : (index % 2) * 0.08 }}
       className={cn("group", isFull && "md:col-span-2 md:grid md:grid-cols-[1.55fr_1fr] md:items-end md:gap-12")}
       data-testid={`project-${project.slug}`}>
-      <div
+      {/* No card largo a imagem fica alinhada ao fim do texto; com o "como funciona" aberto o texto
+          cresce bem além dela, então ela sobe para o topo em vez de deixar um vão em cima. */}
+      <motion.div
+        layout="position"
+        transition={{ duration: 0.4, ease }}
         className={cn(
           "relative overflow-hidden rounded-[20px] border border-border",
           isFull ? "aspect-[16/10] md:aspect-[16/9]" : "aspect-[16/10]",
+          isFull && howOpen && "md:self-start",
           tone === "light" ? "bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#ece8de_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,#2a2822_0%,#1b1a16_70%)]" : "bg-muted",
         )}>
         <ProjectVisual project={project} />
-      </div>
+      </motion.div>
 
       <div className={cn("mt-6", isFull && "md:mt-0 md:pb-2")}>
         <p className="eyebrow">
@@ -94,6 +167,8 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
             </li>
           ))}
         </ul>
+
+        {project.howItWorks && <HowItWorks note={project.howItWorks} open={howOpen} onToggle={() => setHowOpen((value) => !value)} />}
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
           <p className="font-mono text-[11.5px] text-muted-foreground">{project.stack.join(" · ")}</p>

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Menu, Moon, Sun, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "@/components/theme-provider";
+import { shortcutLabel } from "@/components/command-menu";
 import { useLocale } from "@/hooks/use-locale";
 import { ease } from "@/components/reveal";
 import { cn } from "@/lib/utils";
@@ -53,7 +54,7 @@ function ThemeToggle({ className }: { className?: string }) {
   );
 }
 
-export default function Navigation() {
+export default function Navigation({ onCommand }: { onCommand: () => void }) {
   const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -116,6 +117,15 @@ export default function Navigation() {
             </a>
           ))}
           <span className="mx-2 h-4 w-px bg-border" aria-hidden />
+          <button
+            type="button"
+            onClick={onCommand}
+            aria-label={t("command.open")}
+            aria-keyshortcuts="Meta+K Control+K"
+            className="inline-flex h-9 items-center rounded-full px-3 font-mono text-[11px] tracking-[0.12em] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            data-testid="command-toggle">
+            {shortcutLabel}
+          </button>
           <LanguageToggle />
           <ThemeToggle />
         </div>

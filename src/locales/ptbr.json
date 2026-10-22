@@ -97,6 +97,7 @@
     "title": "Coisas que eu <0>construí</0>.",
     "subtitle": "Produtos para clientes, um TCC e alguns jogos que começaram como “só um fim de semana”.",
     "private": "código privado",
+    "howItWorks": "Como funciona",
     "archiveTitle": "E mais algumas",
     "archiveHint": "Ferramentas, experimentos e projetos menores, quase todos com código aberto."
   },
@@ -151,6 +152,27 @@
     "madeIn": "Feito em Criciúma, SC",
     "localTime": "agora aqui",
     "backToTop": "Voltar ao topo"
+  },
+  "command": {
+    "open": "Abrir comandos",
+    "title": "Comandos",
+    "placeholder": "Digite um comando ou procure…",
+    "empty": "Nenhum comando com esse nome.",
+    "go": "Ir para",
+    "projects": "Projetos",
+    "actions": "Ações",
+    "copyEmail": "Copiar e-mail",
+    "copied": "E-mail copiado",
+    "cv": "Baixar CV",
+    "dark": "Tema escuro",
+    "light": "Tema claro",
+    "language": "Read in English",
+    "snake": "Jogar snake no gráfico do GitHub",
+    "incident": "derruba o SAP lá no topo",
+    "hire": "abre um e-mail com o assunto pronto",
+    "hireSubject": "Oportunidade",
+    "quit": "fecha isto aqui",
+    "hints": "↑↓ navegar · ↵ abrir · esc fechar"
   },
   "notFound": {
     "title": "Essa página caiu na DLQ.",

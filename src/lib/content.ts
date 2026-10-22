@@ -1,4 +1,5 @@
 import engenhoImg from "@/assets/projects/engenho.jpg";
+import engenhoVideo from "@/assets/projects/engenho.mp4";
 import ouroborosImg from "@/assets/projects/ouroboros.jpg";
 import msappImg from "@/assets/projects/msapp.png";
 import centralComprasImg from "@/assets/projects/centralcompras.jpg";
@@ -141,7 +142,11 @@ export const experience: Experience[] = [
   },
 ];
 
-export type ProjectVisual = { kind: "image"; src: string; fit?: "cover" | "contain"; tone?: "dark" | "light" } | { kind: "energy" } | { kind: "calendar" } | { kind: "recommendations" };
+export type ProjectVisual =
+  | { kind: "image"; src: string; video?: string; fit?: "cover" | "contain"; tone?: "dark" | "light" }
+  | { kind: "energy" }
+  | { kind: "calendar" }
+  | { kind: "recommendations" };
 
 export type Project = {
   slug: string;
@@ -151,6 +156,8 @@ export type Project = {
   tagline: Localized;
   description: Localized;
   metrics: Localized[];
+  // Um parágrafo curto e o trecho de código que sustenta a afirmação principal do card.
+  howItWorks?: { text: Localized; code: string };
   stack: string[];
   links: { label: Localized; href: string }[];
   visual: ProjectVisual;
@@ -177,9 +184,19 @@ export const projects: Project[] = [
       { pt: "~14 mil linhas de TS", en: "~14k lines of TS" },
       { pt: "0 arquivos de arte ou som", en: "0 art or sound files" },
     ],
+    howItWorks: {
+      text: {
+        pt: "A simulação não importa nada do Three.js: é estado e regras, e roda sem navegador. Nos testes, um robô joga oito ilhas inteiras, e o CI quebra se ele não vencer em 75 minutos de jogo ou se a mesma semente jogar diferente.",
+        en: "The simulation imports nothing from Three.js: it's state and rules, and it runs without a browser. In the test suite a bot plays eight whole islands, and CI fails if it doesn't win within 75 in-game minutes or if the same seed plays out differently.",
+      },
+      code: `const sim = new Simulation(Simulation.newState(seed));
+new AutoPlayer(sim).run(90);
+expect(sim.s.won).toBe(true);
+expect(sim.s.time / 60).toBeLessThanOrEqual(75);`,
+    },
     stack: ["Three.js", "TypeScript", "WebGL 2", "Web Audio"],
     links: [{ label: play, href: "https://engenho.cakowebber.dev" }],
-    visual: { kind: "image", src: engenhoImg },
+    visual: { kind: "image", src: engenhoImg, video: engenhoVideo },
     span: "full",
   },
   {
@@ -197,6 +214,17 @@ export const projects: Project[] = [
       { pt: "ESP32 + C++", en: "ESP32 + C++" },
       { pt: "alertas sem cron", en: "cron-free alerts" },
     ],
+    howItWorks: {
+      text: {
+        pt: "Cada leitura do ESP32 já soma no total do dia e do mês com um upsert incremental, então o dashboard nunca varre medições. Offline é o único alerta que nenhuma leitura dispara, por isso ele é checado quando alguém abre os alertas.",
+        en: "Every ESP32 reading is added straight into the day and month totals with an incremental upsert, so the dashboard never scans raw measurements. Offline is the one alert no reading can trigger, so it's checked whenever someone opens the alerts.",
+      },
+      code: `prisma.dailyConsumption.upsert({
+  where: { deviceId_date: { deviceId, date } },
+  update: { totalKwh: { increment: kwh } },
+  create: { deviceId, date, totalKwh: kwh },
+});`,
+    },
     stack: ["NestJS", "Prisma", "PostgreSQL", "ESP32", "Next.js"],
     links: [],
     visual: { kind: "energy" },
@@ -217,6 +245,16 @@ export const projects: Project[] = [
       { pt: "dinheiro em centavos", en: "money in cents" },
       { pt: "monorepo tipado", en: "typed monorepo" },
     ],
+    howItWorks: {
+      text: {
+        pt: "Checar se existe e depois inserir falha quando duas reservas chegam juntas, então a regra mora no banco: o Postgres recusa qualquer período que encoste em outro no mesmo imóvel. O intervalo é semiaberto, e o dia do check-out já fica livre pro próximo hóspede.",
+        en: "Check-then-insert breaks when two bookings arrive together, so the rule lives in the database: Postgres rejects any period that touches another on the same property. The range is half-open, so check-out day is already free for the next guest.",
+      },
+      code: `EXCLUDE USING gist (
+  "propertyId" WITH =,
+  daterange("checkIn", "checkOut", '[)') WITH &&
+) WHERE (status <> 'CANCELADA');`,
+    },
     stack: ["NestJS", "Next.js", "Prisma", "PostgreSQL", "Zod"],
     links: [],
     visual: { kind: "calendar" },
@@ -237,6 +275,14 @@ export const projects: Project[] = [
       { pt: "40 bênçãos", en: "40 blessings" },
       { pt: "replay determinístico", en: "deterministic replay" },
     ],
+    howItWorks: {
+      text: {
+        pt: "No replay, o relógio do motor vira um relógio virtual que anda tique a tique, e todo sorteio que importa sai de um RNG semeado. Antes de reexecutar, limites baratos como versão do motor, duração e densidade de teclas já derrubam o que é obviamente falso.",
+        en: "On replay, the engine's clock becomes a virtual one that advances tick by tick, and every roll that matters comes from a seeded RNG. Before replaying, cheap limits like engine version, duration and input density already reject anything obviously fake.",
+      },
+      code: `{ "seed": 2026, "ticks": 568,
+  "events": [[3, "d", 0], [11, "d", 1], [42, "c", 2]] }`,
+    },
     stack: ["Next.js", "TypeScript", "SQLite", "Turso"],
     links: [{ label: play, href: "https://ouroboros.cakowebber.dev" }],
     visual: { kind: "image", src: ouroborosImg, tone: "dark" },

@@ -4,6 +4,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight, Gamepad2, Rota
 import { Trans, useTranslation } from "react-i18next";
 import SectionHeading from "@/components/section-heading";
 import { Reveal } from "@/components/reveal";
+import { useCommandEvent } from "@/hooks/use-command-event";
 import { useLocale } from "@/hooks/use-locale";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { profile } from "@/lib/content";
@@ -136,6 +137,12 @@ export default function GithubSection() {
     eatenRef.current = new Set();
     setStatus("idle");
   }, []);
+
+  // "Jogar snake" na paleta de comandos: rola até o gráfico e só começa quando ele já está na tela.
+  useCommandEvent("snake", () => {
+    boardRef.current?.scrollIntoView({ block: "center" });
+    window.setTimeout(start, 800);
+  });
 
   const turn = useCallback((next: Point) => {
     const queue = queueRef.current;
