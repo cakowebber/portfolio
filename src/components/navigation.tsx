@@ -1,225 +1,164 @@
-import { useState, useEffect } from "react";
-import { Moon, Sun, Menu, X, Earth } from "lucide-react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useTheme } from "@/components/theme-provider";
-import { useAnimationMode, type AnimationMode } from "@/components/animation-mode-provider";
-import { Button } from "@/components/ui/button";
+import { Menu, Moon, Sun, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "@/components/theme-provider";
+import { useLocale } from "@/hooks/use-locale";
+import { ease } from "@/components/reveal";
+import { cn } from "@/lib/utils";
+
+const sections = ["about", "experience", "projects", "contact"] as const;
+
+function LanguageToggle({ className }: { className?: string }) {
+  const { t } = useTranslation();
+  const { lang, toggle } = useLocale();
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={t("nav.language")}
+      className={cn("inline-flex h-9 items-center gap-1 rounded-full px-3 font-mono text-[11px] tracking-[0.12em] transition-colors hover:bg-accent", className)}
+      data-testid="language-toggle">
+      <span className={lang === "pt" ? "text-foreground" : "text-muted-foreground"}>PT</span>
+      <span className="text-line">/</span>
+      <span className={lang === "en" ? "text-foreground" : "text-muted-foreground"}>EN</span>
+    </button>
+  );
+}
+
+function ThemeToggle({ className }: { className?: string }) {
+  const { t } = useTranslation();
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={t("nav.theme")}
+      className={cn("inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-accent", className)}
+      data-testid="theme-toggle">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span
+          key={isDark ? "sun" : "moon"}
+          initial={{ opacity: 0, rotate: -60, scale: 0.6 }}
+          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+          exit={{ opacity: 0, rotate: 60, scale: 0.6 }}
+          transition={{ duration: 0.25, ease }}>
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </motion.span>
+      </AnimatePresence>
+    </button>
+  );
+}
 
 export default function Navigation() {
-  const { theme, setTheme } = useTheme();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("home");
-  const { mode, setMode } = useAnimationMode();
-  const { i18n } = useTranslation();
   const { t } = useTranslation();
-
-  const animationOptions: Array<{ mode: AnimationMode; label: string }> = [
-    { mode: "off", label: t("animation-mode-off") },
-    { mode: "balanced", label: t("animation-mode-balanced") },
-    { mode: "full", label: t("animation-mode-full") },
-  ];
-
-  const desktopAnimationOptions: Array<{ mode: AnimationMode; label: string }> = [
-    { mode: "off", label: "OFF" },
-    { mode: "balanced", label: "BAL" },
-    { mode: "full", label: "FULL" },
-  ];
-
-  const navItems = [
-    { href: "#home", label: t("start") },
-    { href: "#about", label: t("about") },
-    { href: "#projects", label: t("projects") },
-    { href: "#experience", label: t("experience") },
-    { href: "#contact", label: t("contact") },
-  ];
-
-  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    const target = document.querySelector(href);
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-      setIsMobileMenuOpen(false);
-    }
-  };
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [active, setActive] = useState<string>("");
 
   useEffect(() => {
     let raf = 0;
 
-    const updateActiveSection = () => {
-      const sections = document.querySelectorAll("section[id]");
+    const update = () => {
+      raf = 0;
+      setIsScrolled(window.scrollY > 12);
+
       let current = "";
-
-      sections.forEach((section) => {
-        const sectionTop = section.getBoundingClientRect().top;
-        if (sectionTop <= 100) {
-          current = section.getAttribute("id") || "";
-        }
-      });
-
-      setActiveSection((prev) => (prev === current ? prev : current));
+      for (const id of sections) {
+        const el = document.getElementById(id);
+        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.35) current = id;
+      }
+      setActive(current);
     };
 
     const onScroll = () => {
-      if (raf) return;
-      raf = window.requestAnimationFrame(() => {
-        updateActiveSection();
-        raf = 0;
-      });
+      if (!raf) raf = window.requestAnimationFrame(update);
     };
 
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    updateActiveSection();
-
     return () => {
       window.removeEventListener("scroll", onScroll);
       if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/70 bg-background/85 backdrop-blur-md">
-      <div className="absolute top-0 inset-x-0 h-px bg-primary/50" />
-      <div className="container mx-auto px-4 md:px-8 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 border border-primary bg-primary/15 flex items-center justify-center">
-              <span className="text-white font-bold text-sm font-mono">CM</span>
-            </div>
-            <span className="text-lg md:text-xl font-display tracking-tight uppercase">Carlos Miguel</span>
-          </div>
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-300 border-b",
+        isScrolled || isOpen ? "bg-background/80 backdrop-blur-md border-border/80" : "bg-transparent border-transparent",
+      )}>
+      <nav className="container flex h-16 items-center justify-between">
+        <a href="#top" aria-label={t("nav.home")} className="font-serif text-[28px] leading-none tracking-tight" onClick={() => setIsOpen(false)}>
+          cm<span className="text-primary">.</span>
+        </a>
 
-          <div className="hidden md:flex items-center space-x-5">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => handleSmoothScroll(e, item.href)}
-                data-magnetic="true"
-                className={`nav-link text-text-lighter hover:text-foreground ${activeSection === item.href.slice(1) ? "active text-foreground" : ""}`}
-                data-testid={`nav-${item.href.slice(1)}`}>
-                {item.label}
-              </a>
-            ))}
-
-            <div className="flex items-center gap-1 border border-border/70 bg-secondary/35 px-1.5 py-0.5" data-testid="animation-toggle">
-              <div className="flex items-center gap-1">
-                {desktopAnimationOptions.map((option) => (
-                  <button
-                    key={option.mode}
-                    type="button"
-                    onClick={() => setMode(option.mode)}
-                    data-magnetic="true"
-                    className={`px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-[0.1em] border leading-none transition-colors ${mode === option.mode ? "border-primary bg-primary/20 text-foreground" : "border-border text-text-light hover:text-foreground hover:border-primary/40"}`}>
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => i18n.changeLanguage(i18n.language === "en" ? "pt-BR" : "en")}
-              data-magnetic="true"
-              className="h-9 w-9 rounded-none glass-light hover:bg-primary/40 font-display"
-              data-testid="language-toggle">
-              {i18n.language === "en" ? "EN" : "BR"}
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              data-magnetic="true"
-              className="h-9 w-9 rounded-none glass-light hover:bg-primary/40 font-display"
-              data-testid="theme-toggle">
-              {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-            </Button>
-          </div>
-
-          <Button variant="ghost" size="icon" className="md:hidden rounded-none glass-light" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} data-testid="mobile-menu-toggle">
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+        <div className="hidden md:flex items-center gap-1">
+          {sections.map((id) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className={cn("relative rounded-full px-3.5 py-2 text-[14px] transition-colors hover:text-foreground", active === id ? "text-foreground" : "text-muted-foreground")}
+              data-testid={`nav-${id}`}>
+              {t(`nav.${id}`)}
+              {active === id && <motion.span layoutId="nav-active" className="absolute left-1/2 -bottom-0.5 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" transition={{ duration: 0.4, ease }} />}
+            </a>
+          ))}
+          <span className="mx-2 h-4 w-px bg-border" aria-hidden />
+          <LanguageToggle />
+          <ThemeToggle />
         </div>
 
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
-              className="md:hidden mt-4 pb-4"
-              data-testid="mobile-menu">
-              <div className="flex flex-col space-y-4 border border-border bg-card p-4">
-                {navItems.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    onClick={(e) => handleSmoothScroll(e, item.href)}
-                    className="text-text-lighter hover:text-foreground uppercase tracking-wider text-sm font-display"
-                    data-testid={`mobile-nav-${item.href.slice(1)}`}>
-                    {item.label}
-                  </a>
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => setIsOpen((open) => !open)}
+            aria-label={isOpen ? t("nav.close") : t("nav.menu")}
+            aria-expanded={isOpen}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-accent"
+            data-testid="mobile-menu-toggle">
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </nav>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3, ease }}
+            className="md:hidden h-[calc(100dvh-4rem)] border-t border-border bg-background"
+            data-testid="mobile-menu">
+            <div className="container flex h-full flex-col justify-between py-8">
+              <ul className="space-y-1">
+                {sections.map((id, index) => (
+                  <motion.li key={id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, ease, delay: 0.05 * index }}>
+                    <a href={`#${id}`} onClick={() => setIsOpen(false)} className="flex items-baseline gap-4 py-2 font-serif text-5xl">
+                      <span className="font-mono text-xs text-muted-foreground">0{index + 1}</span>
+                      {t(`nav.${id}`)}
+                    </a>
+                  </motion.li>
                 ))}
-
-                <div className="border border-border p-2" data-testid="mobile-animation-toggle">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-light mb-2">{t("animation-label")}</p>
-                  <div className="grid grid-cols-3 gap-1">
-                    {animationOptions.map((option) => (
-                      <button
-                        key={option.mode}
-                        type="button"
-                        onClick={() => setMode(option.mode)}
-                        className={`px-2 py-1 text-[10px] font-mono uppercase tracking-[0.1em] border transition-colors ${mode === option.mode ? "border-primary bg-primary/20 text-foreground" : "border-border text-text-light"}`}>
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-light mt-2">{t("animation-hint")}</p>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  onClick={() => i18n.changeLanguage(i18n.language === "en" ? "pt-BR" : "en")}
-                  className="justify-start p-0 h-auto font-normal text-text-lighter hover:text-foreground rounded-none font-display"
-                  data-testid="mobile-language-toggle">
-                  {i18n.language === "en" ? (
-                    <>
-                      <Earth className="h-4 w-4 mr-2" />
-                      EN
-                    </>
-                  ) : (
-                    <>
-                      <Earth className="h-4 w-4 mr-2" />
-                      BR
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                  className="justify-start p-0 h-auto font-normal text-text-lighter hover:text-foreground rounded-none font-display"
-                  data-testid="mobile-theme-toggle">
-                  {theme === "light" ? (
-                    <>
-                      <Moon className="h-4 w-4 mr-2" />
-                      {t("dark-mode")}
-                    </>
-                  ) : (
-                    <>
-                      <Sun className="h-4 w-4 mr-2" />
-                      {t("light-mode")}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </nav>
+              </ul>
+              <LanguageToggle className="self-start -ml-3 text-[13px]" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
   );
 }

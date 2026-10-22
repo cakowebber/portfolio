@@ -13,6 +13,7 @@ i18n
       en: { translation: en },
       "pt-BR": { translation: ptBR },
     },
+    supportedLngs: ["pt-BR", "en"],
     fallbackLng: "en",
     interpolation: {
       escapeValue: false,
@@ -20,7 +21,16 @@ i18n
     detection: {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],
+      // "pt", "pt-PT" e afins caem no pt-BR; o resto vai para o inglês.
+      convertDetectedLanguage: (lng: string) => (lng.toLowerCase().startsWith("pt") ? "pt-BR" : "en"),
     },
   });
+
+const syncDocumentLang = (lng: string) => {
+  document.documentElement.lang = lng === "en" ? "en" : "pt-BR";
+};
+
+syncDocumentLang(i18n.language);
+i18n.on("languageChanged", syncDocumentLang);
 
 export default i18n;

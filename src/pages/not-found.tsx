@@ -1,21 +1,20 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function NotFound() {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">404 Page Not Found</h1>
-          </div>
+  const { t } = useTranslation();
 
-          <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+  return (
+    <main className="container flex min-h-screen flex-col justify-center py-24">
+      <p className="eyebrow">404 · dead letter</p>
+      <h1 className="mt-6 max-w-3xl font-serif text-[clamp(3rem,8vw,6rem)] leading-[0.95] tracking-[-0.02em] text-balance">{t("notFound.title")}</h1>
+      <p className="mt-6 max-w-md text-[17px] text-muted-foreground">{t("notFound.description")}</p>
+      <a
+        href="/"
+        className="group mt-10 inline-flex h-11 w-fit items-center gap-2 rounded-full bg-foreground px-5 text-[14px] font-medium text-background hover:bg-primary hover:text-primary-foreground">
+        <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+        {t("notFound.back")}
+      </a>
+    </main>
   );
 }

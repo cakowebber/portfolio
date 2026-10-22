@@ -1,69 +1,41 @@
-import { Github, Linkedin, Globe } from "lucide-react";
-import { personalInfo } from "@/lib/constants";
+import { ArrowUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/hooks/use-locale";
+import { useLocalTime } from "@/hooks/use-local-time";
+import { profile, socials } from "@/lib/content";
 
 export default function Footer() {
   const { t } = useTranslation();
+  const { intl } = useLocale();
+  const time = useLocalTime(intl);
 
   return (
-    <footer className="py-12 md:py-14 px-4 md:px-8 border-t border-dark-border relative z-10">
-      <div className="container mx-auto max-w-6xl">
-        <div className="grid md:grid-cols-[1fr_auto] gap-8 items-end">
-          <div>
-            <div className="flex items-center space-x-3 mb-5">
-              <div className="w-10 h-10 border border-primary bg-primary/20 flex items-center justify-center">
-                <span className="text-white font-bold text-sm font-mono">{t("footer-initials")}</span>
-              </div>
-              <span className="text-2xl font-display uppercase tracking-tight" data-testid="footer-name">
-                {t("footer-name")}
-              </span>
-            </div>
+    <footer className="border-t border-border">
+      <div className="container py-14 md:py-20">
+        <p className="font-serif text-[clamp(3.5rem,14vw,11rem)] leading-[0.85] tracking-[-0.03em] text-foreground/90" aria-hidden>
+          Carlos <span className="italic text-primary">Miguel</span>
+        </p>
 
-            <p className="text-text-light mb-6 max-w-2xl text-balance" data-testid="footer-description">
-              {t("footer-description")}
-            </p>
-
-            <div className="text-text-light text-sm space-y-2">
-              <p data-testid="footer-copyright">{t("footer-copyright")}</p>
-              <p data-testid="footer-made-with">{t("footer-made-with")}</p>
-            </div>
-          </div>
-
-          <div className="flex md:justify-end space-x-4 md:space-x-6">
-            <a
-              href={personalInfo.github}
-              target="_blank"
-              rel="me noopener noreferrer"
-              title={t("footer-github-label")}
-              aria-label={t("footer-github-label")}
-              data-magnetic="true"
-              className="w-11 h-11 border border-border bg-secondary flex items-center justify-center text-text-light hover:text-primary hover:border-primary/70 transition-colors"
-              data-testid="footer-github">
-              <Github className="h-5 w-5" />
+        <div className="mt-12 grid gap-6 font-mono text-[12px] text-muted-foreground md:grid-cols-3 md:items-end">
+          <p>
+            © {new Date().getFullYear()} {profile.name}
+            <br />
+            {t("footer.madeIn")} · {t("footer.localTime")} <span className="tabular-nums text-foreground">{time}</span>
+          </p>
+          <p className="flex gap-5 md:justify-center">
+            {socials.map((social) => (
+              <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" className="link-underline hover:text-foreground">
+                {social.label}
+              </a>
+            ))}
+            <a href={`mailto:${profile.email}`} className="link-underline hover:text-foreground">
+              E-mail
             </a>
-            <a
-              href={personalInfo.linkedin}
-              target="_blank"
-              rel="me noopener noreferrer"
-              title={t("footer-linkedin-label")}
-              aria-label={t("footer-linkedin-label")}
-              data-magnetic="true"
-              className="w-11 h-11 border border-border bg-secondary flex items-center justify-center text-text-light hover:text-primary hover:border-primary/70 transition-colors"
-              data-testid="footer-linkedin">
-              <Linkedin className="h-5 w-5" />
-            </a>
-            <a
-              href={personalInfo.portfolio}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={t("footer-portfolio-label")}
-              aria-label={t("footer-portfolio-label")}
-              data-magnetic="true"
-              className="w-11 h-11 border border-border bg-secondary flex items-center justify-center text-text-light hover:text-primary hover:border-primary/70 transition-colors"
-              data-testid="footer-portfolio">
-              <Globe className="h-5 w-5" />
-            </a>
-          </div>
+          </p>
+          <a href="#top" className="group inline-flex items-center gap-1.5 hover:text-foreground md:justify-self-end">
+            {t("footer.backToTop")}
+            <ArrowUp className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
+          </a>
         </div>
       </div>
     </footer>

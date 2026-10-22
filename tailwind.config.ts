@@ -1,9 +1,17 @@
 import type { Config } from "tailwindcss";
 
+// Cores vêm de variáveis CSS; color-mix permite modificadores de opacidade como bg-primary/20.
+const token = (name: string) => `color-mix(in srgb, var(--${name}) calc(<alpha-value> * 100%), transparent)`;
+
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
+    container: {
+      center: true,
+      padding: { DEFAULT: "1.25rem", md: "2rem" },
+      screens: { "2xl": "1200px" },
+    },
     extend: {
       borderRadius: {
         lg: "var(--radius)",
@@ -11,120 +19,71 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: token("background"),
+        foreground: token("foreground"),
         card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
+          DEFAULT: token("card"),
+          foreground: token("card-foreground"),
         },
         popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
+          DEFAULT: token("popover"),
+          foreground: token("popover-foreground"),
         },
         primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
+          DEFAULT: token("primary"),
+          foreground: token("primary-foreground"),
         },
         secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
+          DEFAULT: token("secondary"),
+          foreground: token("secondary-foreground"),
         },
         muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
+          DEFAULT: token("muted"),
+          foreground: token("muted-foreground"),
         },
         accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
+          DEFAULT: token("accent"),
+          foreground: token("accent-foreground"),
         },
         destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
+          DEFAULT: token("destructive"),
+          foreground: token("destructive-foreground"),
         },
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
-        chart: {
-          "1": "var(--chart-1)",
-          "2": "var(--chart-2)",
-          "3": "var(--chart-3)",
-          "4": "var(--chart-4)",
-          "5": "var(--chart-5)",
+        border: token("border"),
+        input: token("input"),
+        ring: token("ring"),
+        line: token("line"),
+        signal: {
+          ok: token("signal-ok"),
+          warn: token("signal-warn"),
+          fail: token("signal-fail"),
         },
-        sidebar: {
-          DEFAULT: "var(--sidebar-background)",
-          foreground: "var(--sidebar-foreground)",
-          primary: "var(--sidebar-primary)",
-          "primary-foreground": "var(--sidebar-primary-foreground)",
-          accent: "var(--sidebar-accent)",
-          "accent-foreground": "var(--sidebar-accent-foreground)",
-          border: "var(--sidebar-border)",
-          ring: "var(--sidebar-ring)",
-        },
-
-        "primary-blue": "var(--primary-blue)",
-        "primary-dark": "var(--primary-dark)",
-        "dark-bg": "var(--dark-bg)",
-        "dark-light": "var(--dark-light)",
-        "dark-border": "var(--dark-border)",
-        "text-light": "var(--text-light)",
-        "text-lighter": "var(--text-lighter)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
-        display: ["var(--font-display)"],
+        display: ["var(--font-serif)"],
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
-        float: {
-          "0%, 100%": { transform: "translate3d(0,0,0) rotate(0deg)" },
-          "50%": { transform: "translate3d(0,-25px,0) rotate(1.5deg)" },
-        },
-        glow: {
-          "0%": { boxShadow: "inset 0 0 0 1px rgba(186, 67, 67, 0.45), 0 0 16px rgba(166, 43, 43, 0.35)" },
-          "100%": { boxShadow: "inset 0 0 0 1px rgba(200, 82, 82, 0.65), 0 0 24px rgba(176, 56, 56, 0.6)" },
-        },
-        slideUp: {
-          "0%": { transform: "translate3d(0,72px,0)", opacity: "0" },
-          "100%": { transform: "translate3d(0,0,0)", opacity: "1" },
-        },
-        fadeIn: {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
-        },
-        blink: {
-          "0%, 50%": { opacity: "1" },
-          "51%, 100%": { opacity: "0" },
+        pulseDot: {
+          "0%": { boxShadow: "0 0 0 0 var(--pulse-color, rgba(47, 133, 90, 0.45))" },
+          "70%": { boxShadow: "0 0 0 7px transparent" },
+          "100%": { boxShadow: "0 0 0 0 transparent" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        float: "float 10s cubic-bezier(0.22, 1, 0.36, 1) infinite",
-        glow: "glow 1.8s cubic-bezier(0.19, 1, 0.22, 1) infinite alternate",
-        "slide-up": "slideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1)",
-        "fade-in": "fadeIn 0.8s ease-out",
-        blink: "blink 1s infinite",
-      },
-      backdropBlur: {
-        xs: "2px",
+        "pulse-dot": "pulseDot 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite",
       },
     },
   },

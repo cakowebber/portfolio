@@ -8,17 +8,33 @@ Personal portfolio, live at [cakowebber.dev](https://cakowebber.dev/)
 
 ## Stack
 
-- React
-- Motion
-- JavaScript
+- React + TypeScript
+- Tailwind CSS
+- Framer Motion
+- i18next (PT-BR / EN)
 
 ---
 
 ## Content
 
-- Technologies & tools
-- Featured projects
-- Work experience
+- A tiny, interactive version of my day job: orders flowing from SAP to marketplaces, with retry and DLQ
+- Experience, tools and selected projects
+- My GitHub contributions from the last 12 months, which you can also play snake on
+
+All copy lives in `src/locales/*.json` and `src/lib/content.ts`.
+
+---
+
+## Scripts
+
+```bash
+npm run dev          # dev server
+npm run build        # production build
+npm run check        # type check
+npm run sync:github  # refresh src/data/github.json (needs an authenticated gh CLI)
+```
+
+The contact form uses EmailJS and reads `VITE_EMAILJS_PUBLIC_KEY`, `VITE_EMAILJS_SERVICE_ID` and `VITE_EMAILJS_TEMPLATE_ID`.
 
 ---
 

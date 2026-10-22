@@ -22,7 +22,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           "vendor-react": ["react", "react-dom", "wouter", "next-themes"],
-          "vendor-motion": ["framer-motion", "lenis"],
+          "vendor-motion": ["framer-motion"],
           "vendor-i18n": ["i18next", "react-i18next", "i18next-browser-languagedetector"],
           "vendor-ui": ["lucide-react", "class-variance-authority", "clsx", "tailwind-merge"],
         },

@@ -1,229 +1,153 @@
-import { useEffect, useMemo, useState } from "react";
-import { Github, ExternalLink } from "lucide-react";
+import { ArrowUpRight, Lock } from "lucide-react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { projects, techStack } from "@/lib/constants";
 import { Trans, useTranslation } from "react-i18next";
 import SectionHeading from "@/components/section-heading";
+import { Reveal, ease } from "@/components/reveal";
+import { CalendarVisual, EnergyVisual, RecommendationsVisual } from "@/components/project-visuals";
+import { useLocale } from "@/hooks/use-locale";
+import { archive, projects, type Project } from "@/lib/content";
+import { cn } from "@/lib/utils";
 
-export default function ProjectsSection() {
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [activeIndex, setActiveIndex] = useState(0);
-  const { i18n } = useTranslation();
-  const { t } = useTranslation();
-
-  const filters = [
-    { key: "all", label: t("filter-all") },
-    { key: "fullstack", label: t("filter-fullstack") },
-    { key: "backend", label: t("filter-backend") },
-    { key: "tools", label: t("filter-tools") },
-  ];
-
-  const filteredProjects = useMemo(() => {
-    return activeFilter === "all" ? projects : projects.filter((project) => project.category === activeFilter);
-  }, [activeFilter]);
-
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [activeFilter]);
-
-  const activeProject = filteredProjects[activeIndex];
-  const isEnglish = i18n.language === "en";
-
-  const stackStats = useMemo(() => {
-    if (!activeProject) return { backend: 0, frontend: 0, tools: 0 };
-
-    const backendSet = new Set(techStack.backend.map((tech) => tech.name));
-    const frontendSet = new Set(techStack.frontend.map((tech) => tech.name));
-    const toolsSet = new Set(techStack.tools.map((tech) => tech.name));
-
-    return activeProject.technologies.reduce(
-      (acc, tech) => {
-        if (backendSet.has(tech)) acc.backend += 1;
-        else if (frontendSet.has(tech)) acc.frontend += 1;
-        else if (toolsSet.has(tech)) acc.tools += 1;
-        else acc.tools += 1;
-        return acc;
-      },
-      { backend: 0, frontend: 0, tools: 0 },
-    );
-  }, [activeProject]);
-
-  const techContext = useMemo(() => {
-    return {
-      TypeScript: isEnglish ? "Development language" : "Linguagem de Desenvolvimento",
-      "Node.js": isEnglish ? "Execution runtime" : "Runtime de Execucao",
-      "REST API": isEnglish ? "Integration contract" : "Contrato de Integracao",
-      CLI: isEnglish ? "Automation interface" : "Interface de Automacao",
-      PostgreSQL: isEnglish ? "Persistent data base" : "Base de Dados Persistente",
-      React: isEnglish ? "User interface layer" : "Camada de Interface",
-      API: isEnglish ? "External integration source" : "Fonte de Integracao",
-      Rust: isEnglish ? "Performance core" : "Nucleo de Performance",
-      PDF: isEnglish ? "Document source" : "Fonte dos Dados",
-      Python: isEnglish ? "Data processing" : "Processamento dos Dados",
-      Excel: isEnglish ? "Data source" : "Fonte dos Dados",
-    } as Record<string, string>;
-  }, [isEnglish]);
+function ProjectVisual({ project }: { project: Project }) {
+  const { visual } = project;
+  if (visual.kind === "energy") return <EnergyVisual />;
+  if (visual.kind === "calendar") return <CalendarVisual />;
+  if (visual.kind === "recommendations") return <RecommendationsVisual />;
 
   return (
-    <section id="projects" className="section-shell pt-20 md:pt-24">
-      <div className="container mx-auto max-w-7xl">
-        <SectionHeading number="02" title={<Trans i18nKey="projects-title" components={[<span className="gradient-text" />]} />} subtitle={t("projects-subtitle")} align="center" />
+    <img
+      src={visual.src}
+      alt={project.title}
+      loading="lazy"
+      decoding="async"
+      className={cn("absolute inset-0 h-full w-full transition-transform duration-1000 ease-out group-hover:scale-[1.035]", visual.fit === "contain" ? "object-contain p-2 md:p-4" : "object-cover")}
+    />
+  );
+}
 
-        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8 reveal" data-reveal="line">
-          {filters.map((filter) => (
-            <Button
-              key={filter.key}
-              variant={activeFilter === filter.key ? "default" : "ghost"}
-              onClick={() => setActiveFilter(filter.key)}
-              data-magnetic="true"
-              className={`px-4 md:px-6 py-2 rounded-none text-xs md:text-sm uppercase tracking-wider transition-colors ${activeFilter === filter.key ? "bg-primary text-white" : "glass-light hover:bg-primary/35"}`}
-              data-testid={`filter-${filter.key}`}>
-              {filter.label}
-            </Button>
+function ProjectLinks({ project }: { project: Project }) {
+  const { t } = useTranslation();
+  const { pick } = useLocale();
+
+  if (project.links.length === 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 font-mono text-[12px] text-muted-foreground">
+        <Lock className="h-3.5 w-3.5" />
+        {t("projects.private")}
+      </span>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-x-5 gap-y-2">
+      {project.links.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group/link inline-flex items-center gap-1 text-[14px] font-medium text-foreground hover:text-primary"
+          data-testid={`project-link-${project.slug}`}>
+          <span className="link-underline">{pick(link.label)}</span>
+          <ArrowUpRight className="h-4 w-4 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5" />
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function ProjectCard({ project, index }: { project: Project; index: number }) {
+  const { pick } = useLocale();
+  const isFull = project.span === "full";
+  const tone = project.visual.kind === "image" ? project.visual.tone : undefined;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px 0px -10% 0px" }}
+      transition={{ duration: 0.9, ease, delay: isFull ? 0 : (index % 2) * 0.08 }}
+      className={cn("group", isFull && "md:col-span-2 md:grid md:grid-cols-[1.55fr_1fr] md:items-end md:gap-12")}
+      data-testid={`project-${project.slug}`}>
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-[20px] border border-border",
+          isFull ? "aspect-[16/10] md:aspect-[16/9]" : "aspect-[16/10]",
+          tone === "light" ? "bg-[radial-gradient(circle_at_50%_40%,#ffffff_0%,#ece8de_70%)] dark:bg-[radial-gradient(circle_at_50%_40%,#2a2822_0%,#1b1a16_70%)]" : "bg-muted",
+        )}>
+        <ProjectVisual project={project} />
+      </div>
+
+      <div className={cn("mt-6", isFull && "md:mt-0 md:pb-2")}>
+        <p className="eyebrow">
+          {pick(project.kind)} · {project.year}
+        </p>
+        <h3 className={cn("mt-3 font-serif leading-[0.95] tracking-[-0.01em]", isFull ? "text-[clamp(2.75rem,5vw,4.5rem)]" : "text-[clamp(2.1rem,3.4vw,2.75rem)]")}>{project.title}</h3>
+        <p className="mt-2 font-serif text-[21px] italic leading-snug text-primary">{pick(project.tagline)}</p>
+        <p className="mt-4 max-w-xl text-[15.5px] leading-relaxed text-muted-foreground text-pretty">{pick(project.description)}</p>
+
+        <ul className="mt-5 flex flex-wrap gap-1.5">
+          {project.metrics.map((metric) => (
+            <li key={metric.en} className="chip gap-1.5 text-foreground/85">
+              <span className="h-1 w-1 rounded-full bg-primary" aria-hidden />
+              {pick(metric)}
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
+          <p className="font-mono text-[11.5px] text-muted-foreground">{project.stack.join(" · ")}</p>
+          <ProjectLinks project={project} />
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+export default function ProjectsSection() {
+  const { t } = useTranslation();
+  const { pick } = useLocale();
+
+  return (
+    <section id="projects" className="py-24 md:py-32">
+      <div className="container">
+        <SectionHeading eyebrow={t("projects.eyebrow")} title={<Trans i18nKey="projects.title" components={[<em />]} />} subtitle={t("projects.subtitle")} />
+
+        <div className="grid gap-x-10 gap-y-20 md:grid-cols-2 md:gap-y-24">
+          {projects.map((project, index) => (
+            <ProjectCard key={project.slug} project={project} index={index} />
           ))}
         </div>
 
-        {filteredProjects.length > 0 ? (
-          <div className="grid lg:grid-cols-[1fr_1.6fr] gap-6 md:gap-8 lg:gap-10 items-start">
-            <div className="panel reveal" data-reveal="slice">
-              <div className="space-y-1">
-                {filteredProjects.map((project, index) => {
-                  const isActive = index === activeIndex;
+        <div className="mt-28 md:mt-36">
+          <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
+            <h3 className="font-serif text-[clamp(2rem,4vw,3rem)] leading-none">{t("projects.archiveTitle")}</h3>
+            <p className="max-w-sm text-[14px] text-muted-foreground">{t("projects.archiveHint")}</p>
+          </Reveal>
 
-                  return (
-                    <button
-                      key={`${activeFilter}-${project.title}-${index}`}
-                      type="button"
-                      onMouseEnter={() => setActiveIndex(index)}
-                      onFocus={() => setActiveIndex(index)}
-                      onClick={() => setActiveIndex(index)}
-                      className={`w-full text-left border px-3 py-3 transition-colors ${isActive ? "border-primary bg-primary/12" : "border-border bg-secondary/45 hover:bg-primary/8"}`}
-                      data-testid={`project-card-${index}`}>
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className={`font-mono text-xs shrink-0 w-5 ${isActive ? "text-primary" : "text-text-light/50"}`} data-testid={`project-title-${index}`}>
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                        <span className={`flex-1 text-sm truncate glitch-hover transition-colors ${isActive ? "text-foreground" : "text-text-light"}`} data-text={project.title} data-testid={`project-description-${index}`}>
-                          {project.title}
-                        </span>
-                        <span className={`font-mono text-[10px] uppercase tracking-[0.12em] px-2 py-0.5 border shrink-0 transition-colors ${isActive ? "border-primary/60 text-primary" : "border-border/50 text-text-light/40"}`}>
-                          {project.category}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {activeProject && (
-              <motion.article
-                key={`${activeFilter}-${activeProject.title}-${activeIndex}`}
-                initial={{ opacity: 0, y: 26 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                className="panel reveal flex flex-col sticky top-24 self-start"
-                data-reveal="zoom">
-                <div className="relative overflow-hidden border border-border mb-5">
-                  <img src={activeProject.image} alt={t("project-image-alt", { title: activeProject.title })} className="w-full h-[260px] md:h-[340px] object-cover" data-testid={`project-image-${activeIndex}`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <div className="absolute left-4 top-4 font-mono text-xs tracking-[0.14em] uppercase text-white/80">{activeFilter}</div>
-                </div>
-
-                <h3 className="text-3xl md:text-5xl leading-[0.92] mb-3">{activeProject.title}</h3>
-                <p className="text-text-light mb-8 leading-relaxed">{i18n.language === "en" ? activeProject.descriptionEn : activeProject.description}</p>
-
-                <div className="border-t border-border pt-4 mb-6">
-                  <div className="flex flex-wrap gap-4 mb-4">
-                    <a
-                      href={activeProject.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-magnetic="true"
-                      className="inline-flex items-center text-text-light hover:text-primary transition-colors text-sm"
-                      data-testid={`project-github-${activeIndex}`}>
-                      <Github className="mr-2 h-4 w-4" />
-                      {t("project-code")}
-                    </a>
-                    {activeProject.demo && (
-                      <a
-                        href={activeProject.demo}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        data-magnetic="true"
-                        className="inline-flex items-center text-text-light hover:text-primary transition-colors text-sm"
-                        data-testid={`project-demo-${activeIndex}`}>
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        Demo
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="grid sm:grid-cols-2 gap-2">
-                    {activeProject.technologies.map((tech, techIndex) => (
-                      <motion.div
-                        key={tech}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: techIndex * 0.05, duration: 0.3 }}
-                        className="border border-border bg-secondary/35 p-3"
-                        data-testid={`project-tech-${activeIndex}-${techIndex}`}>
-                        <p className={`text-sm md:text-base uppercase font-mono ${activeProject.techColors[techIndex]}`}>{tech}</p>
-                        <p className="text-[11px] font-mono uppercase tracking-[0.12em] text-text-light mt-2">{techContext[tech] ?? (isEnglish ? "Core technology" : "Tecnologia Principal")}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-auto pt-6 border-t border-border space-y-3">
-                  <p className="text-xs font-mono uppercase tracking-[0.14em] text-text-light">{t("tech-stack-title")}</p>
-
-                  <div className="space-y-2">
-                    {[
-                      { label: "Backend", value: stackStats.backend },
-                      { label: "Frontend", value: stackStats.frontend },
-                      { label: t("tools"), value: stackStats.tools },
-                    ].map((item) => {
-                      const width = activeProject.technologies.length > 0 ? Math.max((item.value / activeProject.technologies.length) * 100, item.value > 0 ? 18 : 0) : 0;
-                      return (
-                        <div key={item.label} className="grid grid-cols-[6rem_1fr_auto] items-center gap-2">
-                          <span className="text-xs font-mono uppercase tracking-[0.14em] text-text-light">{item.label}</span>
-                          <div className="h-1.5 border border-border bg-secondary/35">
-                            <motion.div className="h-full bg-primary" animate={{ width: `${width}%` }} transition={{ type: "spring", stiffness: 200, damping: 22 }} />
-                          </div>
-                          <span className="text-xs font-mono text-primary">{item.value}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="border border-border bg-secondary/30 px-3 py-2">
-                    <p className="text-xs font-mono uppercase tracking-[0.14em] text-text-light">{activeFilter}</p>
-                  </div>
-                </div>
-              </motion.article>
-            )}
-          </div>
-        ) : (
-          <div className="panel text-center py-12">
-            <p className="text-text-light text-lg" data-testid="no-projects-message">
-              Nenhum projeto encontrado para esta categoria.
-            </p>
-          </div>
-        )}
-
-        <div className="text-center mt-16 md:mt-20 reveal" data-reveal="lift">
-          <a
-            href="https://github.com/ckzwebber"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-magnetic="true"
-            className="inline-flex items-center px-8 py-3 glass-light hover:bg-primary/35 font-semibold rounded-none transition-colors"
-            data-testid="view-all-projects">
-            <Github className="mr-2 h-4 w-4" />
-            {t("view-all-projects")}
-          </a>
+          <ul className="border-t border-border">
+            {archive.map((item, index) => (
+              <motion.li
+                key={item.title}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.04 }}
+                className="border-b border-border">
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group grid grid-cols-[1fr_auto] items-baseline gap-x-6 gap-y-1 py-5 transition-colors md:grid-cols-[4rem_15rem_1fr_13rem_auto] md:px-3 md:-mx-3 md:rounded-lg hover:bg-accent/60">
+                  <span className="hidden font-mono text-[12px] text-muted-foreground md:block">{item.year}</span>
+                  <span className="font-serif text-[24px] leading-tight transition-colors group-hover:text-primary">{item.title}</span>
+                  <span className="col-span-2 row-start-2 text-[14.5px] text-muted-foreground md:col-span-1 md:row-start-auto">{pick(item.description)}</span>
+                  <span className="hidden font-mono text-[11.5px] text-muted-foreground md:block">{item.stack}</span>
+                  <ArrowUpRight className="col-start-2 row-start-1 h-4 w-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary md:col-start-auto md:row-start-auto" />
+                </a>
+              </motion.li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
