@@ -1,0 +1,34 @@
+# Atualiza src/data/github.json toda segunda. O push dispara o deploy no Netlify.
+# Com o secret GH_STATS_TOKEN (um token seu, com read:user), as contribuições privadas entram na
+# contagem, como quando o script roda na sua máquina. Sem ele, só as públicas.
+name: Sync GitHub calendar
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # segunda, 06:00 em Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-github
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: node scripts/sync-github.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GH_STATS_TOKEN || github.token }}
+
+      - name: Commit
+        run: |
+          if git diff --quiet -- src/data/github.json; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: sync github contributions" -- src/data/github.json
+          git push
