@@ -5,7 +5,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const LOGIN = "ckzwebber";
+const LOGIN = "cakowebber";
 const OUT = resolve(dirname(fileURLToPath(import.meta.url)), "../src/data/github.json");
 
 const query = `query($login: String!) {
