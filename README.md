@@ -40,7 +40,7 @@ The contact form uses EmailJS and reads `VITE_EMAILJS_PUBLIC_KEY`, `VITE_EMAILJS
 
 ## Contact
 
-[linkedin.com/in/cmiguelwm](https://www.linkedin.com/in/cmiguelwm/) · [github.com/ckzwebber](https://github.com/ckzwebber)
+[linkedin.com/in/cakowebber](https://www.linkedin.com/in/cakowebber/) · [github.com/cakowebber](https://github.com/cakowebber)
 
 ---
 
