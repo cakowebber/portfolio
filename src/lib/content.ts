@@ -290,7 +290,7 @@ expect(sim.s.time / 60).toBeLessThanOrEqual(75);`,
   },
   {
     slug: "msapp",
-    title: "MSApp",
+    title: "Descubra Morrinhos",
     kind: { pt: "Plataforma de turismo", en: "Tourism platform" },
     year: "2024",
     tagline: { pt: "Uma cidade inteira num só lugar.", en: "A whole town in one place." },
